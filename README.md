@@ -726,6 +726,3 @@ Ao final da construção da BEYUD Platform, o projeto deverá demonstrar:
 ## Autor
 
 Projeto desenvolvido por **Ezequiel Bomfim**, com foco em Cloud, DevOps, Kubernetes, Platform Engineering, infraestrutura como código, observabilidade e operação em cloud.
-
-```
-```
