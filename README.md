@@ -1,17 +1,11 @@
-Claro. Aqui está **somente o `README.md` pronto, formatado e organizado**:
-
-````md
-# BEYUD Platform
-
+## BEYUD Platform
 A **BEYUD Platform** é uma plataforma pública production-style na AWS, desenhada, implantada e operada ponta a ponta com práticas reais de infraestrutura, automação, Kubernetes, observabilidade e operação em cloud.
 
 O objetivo do projeto é demonstrar, de forma organizada e prática, a construção de uma plataforma moderna baseada em AWS, Terraform, Docker, Kubernetes, RKE2, Rancher, GitHub Actions, Argo CD, Amazon ECR, Amazon RDS PostgreSQL, Prometheus, Grafana, Loki e Promtail.
 
----
-
 ## Objetivo do projeto
-
 Este repositório tem como objetivo documentar e implementar uma plataforma production-style com foco em:
+````
 
 - arquitetura cloud na AWS;
 - infraestrutura como código com Terraform;
@@ -24,12 +18,11 @@ Este repositório tem como objetivo documentar e implementar uma plataforma prod
 - observabilidade com Prometheus, Grafana, Loki e Promtail;
 - documentação técnica e evidências operacionais.
 
----
+````
 
 ## Visão geral da arquitetura
-
 A arquitetura da BEYUD Platform será baseada em uma VPC na AWS, com separação por camadas:
-
+```
 - camada pública e de borda;
 - camada privada de aplicação;
 - camada privada de dados;
@@ -41,9 +34,9 @@ A arquitetura da BEYUD Platform será baseada em uma VPC na AWS, com separação
 - Ingress Controller dentro do cluster;
 - observabilidade com métricas, logs e dashboards.
 
-Fluxo principal de entrada pública:
-
-```text
+````
+## Fluxo principal de entrada pública:
+```
 Internet
   -> Route 53
   -> Public ALB HTTPS + ACM
@@ -51,23 +44,23 @@ Internet
   -> beyud-web / beyud-api
 ````
 
-Fluxo de banco de dados:
+## Fluxo de banco de dados:
 
-```text
+```
 beyud-api / beyud-worker
   -> Amazon RDS PostgreSQL
 ```
 
-Fluxo de gerenciamento:
+## Fluxo de gerenciamento:
 
-```text
+```
 Rancher Server
   -> RKE2 Kubernetes Cluster
 ```
 
-Fluxo de saída para internet:
+## Fluxo de saída para internet:
 
-```text
+```
 Private App Subnets / Private Mgmt Subnet
   -> NAT Gateway
   -> Internet Gateway
@@ -103,7 +96,7 @@ Private App Subnets / Private Mgmt Subnet
 
 A BEYUD Platform será composta inicialmente por três aplicações principais:
 
-```text
+```
 apps/
 ├── web/
 ├── api/
