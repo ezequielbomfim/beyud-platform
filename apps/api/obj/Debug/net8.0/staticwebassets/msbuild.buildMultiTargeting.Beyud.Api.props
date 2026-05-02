@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="../build/Beyud.Api.props" />
-</Project>

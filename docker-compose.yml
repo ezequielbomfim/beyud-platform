@@ -1,0 +1,77 @@
+services:
+  beyud-db:
+    image: postgres:16-alpine
+    container_name: beyud-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-beyud}
+      POSTGRES_USER: ${POSTGRES_USER:-beyud}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-beyud_password}
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - beyud_postgres_data:/var/lib/postgresql/data
+      - ./apps/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - beyud-network
+
+  beyud-api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    image: beyud-api:compose
+    container_name: beyud-api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Host=beyud-db;Port=5432;Database=${POSTGRES_DB:-beyud};Username=${POSTGRES_USER:-beyud};Password=${POSTGRES_PASSWORD:-beyud_password}
+    ports:
+      - "${API_PORT:-8080}:8080"
+    depends_on:
+      beyud-db:
+        condition: service_healthy
+    networks:
+      - beyud-network
+
+  beyud-worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    image: beyud-worker:compose
+    container_name: beyud-worker
+    restart: unless-stopped
+    environment:
+      DOTNET_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Host=beyud-db;Port=5432;Database=${POSTGRES_DB:-beyud};Username=${POSTGRES_USER:-beyud};Password=${POSTGRES_PASSWORD:-beyud_password}
+    depends_on:
+      beyud-db:
+        condition: service_healthy
+    networks:
+      - beyud-network
+
+  beyud-web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    image: beyud-web:compose
+    container_name: beyud-web
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-8081}:80"
+    depends_on:
+      - beyud-api
+    networks:
+      - beyud-network
+
+networks:
+  beyud-network:
+    driver: bridge
+
+volumes:
+  beyud_postgres_data:
