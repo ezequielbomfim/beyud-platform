@@ -1,483 +1,721 @@
-Conteúdo recomendado para o README.md:
+## BEYUD Platform
+A **BEYUD Platform** é uma plataforma pública production-style na AWS, desenhada, implantada e operada ponta a ponta com práticas reais de infraestrutura, automação, Kubernetes, observabilidade e operação em cloud.
 
-# BEYUD Platform
+O objetivo do projeto é demonstrar, de forma organizada e prática, a construção de uma plataforma moderna baseada em AWS, Terraform, Docker, Kubernetes, RKE2, Rancher, GitHub Actions, Argo CD, Amazon ECR, Amazon RDS PostgreSQL, Prometheus, Grafana, Loki e Promtail.
 
-BEYUD Platform is a public production-style platform built to demonstrate modern Cloud, DevOps, Kubernetes and Platform Engineering practices on AWS.
+## Objetivo do projeto
+Este repositório tem como objetivo documentar e implementar uma plataforma production-style com foco em:
+````
 
-The project is designed, implemented and operated end-to-end using infrastructure as code, containerization, Kubernetes, GitOps, observability and cloud-native architecture patterns.
+- arquitetura cloud na AWS;
+- infraestrutura como código com Terraform;
+- aplicações em containers;
+- orquestração com Kubernetes RKE2;
+- gerenciamento de cluster com Rancher;
+- pipelines com GitHub Actions;
+- entrega contínua com Argo CD;
+- banco de dados gerenciado com Amazon RDS PostgreSQL;
+- observabilidade com Prometheus, Grafana, Loki e Promtail;
+- documentação técnica e evidências operacionais.
 
-## Objective
+````
 
-The goal of this project is to build a production-style platform on AWS with:
+## Visão geral da arquitetura
+A arquitetura da BEYUD Platform será baseada em uma VPC na AWS, com separação por camadas:
+```
+- camada pública e de borda;
+- camada privada de aplicação;
+- camada privada de dados;
+- camada privada de gerenciamento;
+- cluster Kubernetes RKE2 em subnets privadas;
+- Rancher para gerenciamento do cluster;
+- RDS PostgreSQL em subnets privadas de dados;
+- ALB público com HTTPS;
+- Ingress Controller dentro do cluster;
+- observabilidade com métricas, logs e dashboards.
 
-- AWS networking and infrastructure
-- Terraform
-- Docker
-- Kubernetes with RKE2
-- Rancher for cluster management
-- GitHub Actions for CI
-- Argo CD for GitOps-based delivery
-- Amazon ECR for container images
-- Amazon RDS PostgreSQL
-- Route 53, ACM and Public ALB
-- Prometheus, Grafana and Loki for observability
-- Technical documentation, runbooks and architecture decisions
-
-## Architecture
-
-The platform uses a segmented AWS architecture:
-
-- Public subnets for the internet-facing Application Load Balancer and NAT Gateway
-- Private application subnets for RKE2 Kubernetes nodes
-- Private data subnets for Amazon RDS PostgreSQL
-- Private management subnet for Rancher Server
-- Route 53 for DNS
-- ACM for TLS certificates
-- Amazon ECR for Docker images
-
-![BEYUD Platform AWS Architecture](docs/architecture/beyud-platform-aws-architecture.png)
-
-## Application Components
-
-The application is composed of:
-
-- `beyud-web`: public web frontend
-- `beyud-api`: backend API
-- `beyud-worker`: background worker
-- `beyud-db`: PostgreSQL database
-
-## Repository Structure
-
-```text
-apps/
-  web/
-  api/
-  worker/
-
-infra/
-  terraform/
-
-k8s/
-  base/
-  overlays/
-  argocd/
-
-docs/
-  architecture/
-  decisions/
-  runbooks/
-  evidences/
-  linkedin/
-
-.github/
-  workflows/
-Main Stack
-Area	Technology
-Cloud	AWS
-Infrastructure as Code	Terraform
-Containers	Docker
-Kubernetes	RKE2
-Cluster Management	Rancher
-CI	GitHub Actions
-CD / GitOps	Argo CD
-Registry	Amazon ECR
-Database	Amazon RDS PostgreSQL
-DNS	Route 53
-HTTPS	ACM + ALB
-Metrics	Prometheus
-Dashboards	Grafana
-Logs	Loki + Promtail
-Environment
-
-The main environment is called prod-style.
-
-This name is intentionally used because the project follows production-oriented practices, but it is not a real customer production environment.
-
-Documentation
-
-Architecture documentation is available in:
-
-docs/architecture/overview.md
-docs/architecture/aws-network.md
-docs/architecture/kubernetes.md
-docs/architecture/cicd-gitops.md
-docs/architecture/observability.md
-
-Architectural decisions are documented in:
-
-docs/decisions/
-Project Status
-
-Current phase:
-
-Etapa 0 — Architecture and Vision
-
-Next phases:
-
-Etapa 1 — Local application
-Etapa 2 — Containerization
-Etapa 3 — Local integrated environment with Docker Compose
-Etapa 4 — Terraform AWS foundation
-Etapa 5 — Compute and operational base
-Etapa 6 — Kubernetes cluster
-Etapa 7 — Application deployment
-Etapa 8 — Observability
-Etapa 9 — CI/CD and GitOps
-Etapa 10 — Operational evidence
-Etapa 11 — Professional positioning
-Professional Positioning
-
-This project is intended to demonstrate practical experience with cloud infrastructure, Kubernetes operations, GitOps, observability, automation and platform engineering.
-
-It is not just a lab. It is a public production-style platform designed, implemented and documented end-to-end.
-
-
----
-
-# 5. `docs/architecture/overview.md`
-
-```md
-# BEYUD Platform — Architecture Overview
-
-## Summary
-
-BEYUD Platform is a public production-style platform built on AWS to demonstrate modern Cloud, DevOps, Kubernetes and Platform Engineering practices.
-
-The platform includes a real application composed of a web frontend, backend API, background worker and PostgreSQL database.
-
-## High-Level Architecture
-
-The architecture is based on:
-
-- AWS VPC with public and private subnets
-- Public Application Load Balancer
-- Route 53 DNS
-- ACM TLS certificate
-- RKE2 Kubernetes cluster on private EC2 nodes
-- Rancher Server in a private management subnet
-- Amazon RDS PostgreSQL in private data subnets
-- Amazon ECR for container images
-- GitHub Actions for CI
-- Argo CD for GitOps-based deployment
-- Prometheus, Grafana and Loki for observability
-
-## Main Traffic Flow
-
-```text
+````
+## Fluxo principal de entrada pública:
+```
 Internet
   -> Route 53
-  -> Public ALB HTTPS
+  -> Public ALB HTTPS + ACM
   -> Ingress Controller
   -> beyud-web / beyud-api
-  -> RDS PostgreSQL
-Application Flow
-User accesses the website
-  -> Frontend loads
-  -> User submits contact form
-  -> API stores contact request in PostgreSQL
-  -> Worker processes pending contacts
-  -> Logs and metrics are collected
-Management Flow
-Rancher Server
-  -> manages
-RKE2 Kubernetes Cluster
-Observability Flow
-Pods and nodes
-  -> Prometheus
-  -> Grafana
+````
 
-Container logs
-  -> Promtail
-  -> Loki
-  -> Grafana
+## Fluxo de banco de dados:
+
+```
+beyud-api / beyud-worker
+  -> Amazon RDS PostgreSQL
+```
+
+## Fluxo de gerenciamento:
+
+```
+Rancher Server
+  -> RKE2 Kubernetes Cluster
+```
+
+## Fluxo de saída para internet:
+
+```
+Private App Subnets / Private Mgmt Subnet
+  -> NAT Gateway
+  -> Internet Gateway
+  -> Internet
+```
 
 ---
 
-# 6. `docs/architecture/aws-network.md`
+## Stack principal
 
-```md
-# AWS Network Architecture
+| Categoria                  | Tecnologia                       |
+| -------------------------- | -------------------------------- |
+| Cloud Provider             | AWS                              |
+| Infraestrutura como Código | Terraform                        |
+| Containers                 | Docker                           |
+| Kubernetes                 | RKE2                             |
+| Gerenciamento Kubernetes   | Rancher                          |
+| CI/CD                      | GitHub Actions                   |
+| GitOps                     | Argo CD                          |
+| Registry                   | Amazon ECR                       |
+| Banco de dados             | Amazon RDS PostgreSQL            |
+| DNS                        | Route 53                         |
+| Certificados               | AWS Certificate Manager          |
+| Load Balancer              | Public Application Load Balancer |
+| Métricas                   | Prometheus                       |
+| Dashboards                 | Grafana                          |
+| Logs                       | Loki                             |
+| Coleta de logs             | Promtail                         |
 
-## Region
+---
 
-The initial AWS region is:
+## Aplicações da plataforma
+
+A BEYUD Platform será composta inicialmente por três aplicações principais:
+
+```
+apps/
+├── web/
+├── api/
+└── worker/
+```
+
+### beyud-web
+
+Front-end da plataforma, desenvolvido com **React + Vite**.
+
+Páginas previstas:
+
+* `/`
+* `/sobre`
+* `/servicos`
+* `/contato`
+* `/status`
+
+---
+
+### beyud-api
+
+API principal da plataforma, desenvolvida com **.NET 8 Web API**.
+
+Endpoints previstos:
+
+* `GET /health`
+* `GET /api/status`
+* `GET /api/services`
+* `POST /api/contact`
+
+---
+
+### beyud-worker
+
+Worker Service em **.NET 8**, responsável por processar contatos pendentes no banco de dados.
+
+Fluxo previsto:
+
+```text
+Buscar contatos com status PENDING
+  -> processar
+  -> atualizar para PROCESSED
+  -> gerar logs operacionais
+```
+
+---
+
+## Banco de dados
+
+O banco de dados será **PostgreSQL**, hospedado em **Amazon RDS**.
+
+Tabela principal prevista:
+
+```text
+contacts
+├── id
+├── name
+├── email
+├── company
+├── subject
+├── message
+├── status
+├── created_at
+└── processed_at
+```
+
+Status possíveis:
+
+* `PENDING`
+* `PROCESSING`
+* `PROCESSED`
+* `FAILED`
+
+---
+
+## Arquitetura AWS
+
+A arquitetura AWS definida para a BEYUD Platform utilizará a região:
 
 ```text
 us-east-1
-VPC
-Name: beyud-prod-style-vpc
+```
+
+VPC principal:
+
+```text
+Nome: beyud-prod-style-vpc
 CIDR: 10.60.0.0/16
-Subnets
-Layer	Subnet	CIDR	AZ	Purpose
-Public / Edge	Public Subnet A	10.60.0.0/24	us-east-1a	ALB, NAT Gateway
-Public / Edge	Public Subnet B	10.60.1.0/24	us-east-1b	ALB
-Application	Private App Subnet A	10.60.10.0/24	us-east-1a	RKE2 Node 01 and 03
-Application	Private App Subnet B	10.60.11.0/24	us-east-1b	RKE2 Node 02
-Data	Private Data Subnet A	10.60.20.0/24	us-east-1a	RDS DB Subnet Group
-Data	Private Data Subnet B	10.60.21.0/24	us-east-1b	RDS DB Subnet Group
-Management	Private Mgmt Subnet A	10.60.30.0/24	us-east-1a	Rancher Server
-Public Entry Point
-
-The only public application entry point is the internet-facing Application Load Balancer.
-
-Internet
-  -> Route 53
-  -> Public ALB HTTPS
-  -> Ingress Controller
-Private Components
-
-The following components run in private subnets:
-
-RKE2 Kubernetes nodes
-Rancher Server
-RDS PostgreSQL
-NAT Gateway
-
-A single NAT Gateway is initially deployed in Public Subnet A.
-
-It provides outbound internet access for private resources.
-
-Examples:
-
-OS updates
-package downloads
-container image pulls
-Internet Gateway
-
-The Internet Gateway is attached to the VPC and enables internet access for public resources such as the ALB and NAT Gateway.
-
-Security Direction
-
-The architecture avoids exposing EC2 instances and databases directly to the internet.
-
-Public access is centralized through the ALB.
-
+```
 
 ---
 
-# 7. `docs/architecture/kubernetes.md`
+## Subnets
 
-```md
-# Kubernetes Architecture
+| Nome                  | CIDR          | Zona       | Tipo    | Função                      |
+| --------------------- | ------------- | ---------- | ------- | --------------------------- |
+| Public Subnet A       | 10.60.0.0/24  | us-east-1a | Pública | ALB, NAT Gateway            |
+| Public Subnet B       | 10.60.1.0/24  | us-east-1b | Pública | ALB                         |
+| Private App Subnet A  | 10.60.10.0/24 | us-east-1a | Privada | RKE2 Node 01 e RKE2 Node 03 |
+| Private App Subnet B  | 10.60.11.0/24 | us-east-1b | Privada | RKE2 Node 02                |
+| Private Data Subnet A | 10.60.20.0/24 | us-east-1a | Privada | RDS PostgreSQL              |
+| Private Data Subnet B | 10.60.21.0/24 | us-east-1b | Privada | RDS PostgreSQL              |
+| Private Mgmt Subnet A | 10.60.30.0/24 | us-east-1a | Privada | Rancher Server              |
 
-## Kubernetes Distribution
+---
 
-The platform uses RKE2 as the Kubernetes distribution.
+## Componentes AWS
 
-## Cluster Nodes
+### Route 53
 
-The cluster runs on three private EC2 nodes:
+O **Route 53** será responsável pela resolução DNS pública da plataforma.
+
+Fluxo conceitual:
 
 ```text
-EC2 - RKE2 Node 01
-EC2 - RKE2 Node 02
-EC2 - RKE2 Node 03
-Node Placement
-Node	Subnet	AZ
-RKE2 Node 01	Private App Subnet A	us-east-1a
-RKE2 Node 02	Private App Subnet B	us-east-1b
-RKE2 Node 03	Private App Subnet A	us-east-1a
-Cluster Workloads
+domínio público
+  -> Route 53
+  -> Public ALB
+```
 
-The cluster will run:
+Observação importante:
 
-Ingress Controller
+```text
+Route 53 resolve DNS.
+Route 53 não atua como proxy de tráfego.
+```
+
+---
+
+### AWS Certificate Manager
+
+O **AWS Certificate Manager** será utilizado para gerenciar o certificado TLS/HTTPS da plataforma.
+
+O certificado será associado ao Public Application Load Balancer.
+
+---
+
+### Public Application Load Balancer
+
+O **Public ALB** será responsável por receber o tráfego HTTPS da internet.
+
+Ele ficará associado às duas subnets públicas:
+
+```text
+Public Subnet A
+Public Subnet B
+```
+
+Fluxo:
+
+```text
+Internet
+  -> Route 53
+  -> Public ALB HTTPS + ACM
+  -> Ingress Controller
+```
+
+---
+
+### NAT Gateway
+
+O **NAT Gateway** será utilizado para permitir saída controlada para internet a partir das subnets privadas.
+
+Uso previsto:
+
+* atualizações do sistema operacional;
+* downloads de pacotes;
+* pull de imagens;
+* comunicação de componentes privados com serviços externos autorizados.
+
+Fluxo:
+
+```text
+Private App Subnets / Private Mgmt Subnet
+  -> NAT Gateway
+  -> Internet Gateway
+  -> Internet
+```
+
+---
+
+### Amazon RDS PostgreSQL
+
+O **Amazon RDS PostgreSQL** será utilizado como banco de dados gerenciado da plataforma.
+
+O RDS ficará nas subnets privadas de dados, sem exposição pública.
+
+Fluxo:
+
+```text
+beyud-api / beyud-worker
+  -> Amazon RDS PostgreSQL:5432
+```
+
+---
+
+## Kubernetes
+
+A distribuição Kubernetes definida para o projeto é:
+
+```text
+RKE2
+```
+
+O cluster será composto por três nodes EC2 privados:
+
+| Node               | Subnet               | Zona       |
+| ------------------ | -------------------- | ---------- |
+| EC2 - RKE2 Node 01 | Private App Subnet A | us-east-1a |
+| EC2 - RKE2 Node 02 | Private App Subnet B | us-east-1b |
+| EC2 - RKE2 Node 03 | Private App Subnet A | us-east-1a |
+
+Os nodes ficarão em subnets privadas de aplicação e não serão expostos diretamente à internet.
+
+---
+
+## Entrada de tráfego no cluster
+
+O tráfego público chegará ao cluster pelo seguinte fluxo:
+
+```text
+Internet
+  -> Route 53
+  -> Public ALB HTTPS + ACM
+  -> Ingress Controller
+  -> Kubernetes Services
+  -> Pods
+```
+
+O **Ingress Controller** será responsável por encaminhar as requisições para os serviços internos do Kubernetes.
+
+---
+
+## Workloads previstos no cluster
+
+| Workload     | Função                           |
+| ------------ | -------------------------------- |
+| beyud-web    | Front-end React + Vite           |
+| beyud-api    | API .NET 8 Web API               |
+| beyud-worker | Worker Service .NET 8            |
+| Argo CD      | GitOps e entrega contínua        |
+| Prometheus   | Coleta de métricas               |
+| Grafana      | Dashboards                       |
+| Loki         | Armazenamento e consulta de logs |
+| Promtail     | Coleta de logs                   |
+
+---
+
+## Rancher
+
+O **Rancher Server** será utilizado para gerenciamento do cluster RKE2.
+
+Ele será executado em uma EC2 privada na camada de gerenciamento:
+
+```text
+Private Mgmt Subnet A
+└── Rancher Server
+```
+
+Fluxo de gerenciamento:
+
+```text
+Rancher Server
+  -> RKE2 Kubernetes Cluster
+```
+
+---
+
+## CI/CD e GitOps
+
+A estratégia de CI/CD e GitOps da BEYUD Platform será baseada em:
+
+* GitHub Actions para integração contínua;
+* Amazon ECR para armazenamento de imagens;
+* Argo CD para entrega contínua baseada em GitOps;
+* Kubernetes RKE2 como ambiente de execução.
+
+Fluxo planejado:
+
+```text
+Código no GitHub
+  -> GitHub Actions
+  -> Build e testes
+  -> Build da imagem Docker
+  -> Push para Amazon ECR
+  -> Atualização dos manifestos Kubernetes
+  -> Argo CD detecta mudança
+  -> Argo CD sincroniza o cluster
+  -> Aplicação atualizada no RKE2
+```
+
+---
+
+## GitHub Actions
+
+O **GitHub Actions** será responsável pela etapa de integração contínua.
+
+Responsabilidades previstas:
+
+* validar código;
+* executar testes;
+* gerar build das aplicações;
+* construir imagens Docker;
+* autenticar no Amazon ECR;
+* publicar imagens no registry;
+* atualizar referências de imagem nos manifestos Kubernetes.
+
+---
+
+## Amazon ECR
+
+O **Amazon Elastic Container Registry** será utilizado como registry privado de imagens Docker.
+
+Imagens previstas:
+
+```text
 beyud-web
 beyud-api
 beyud-worker
-Argo CD
-Prometheus
-Grafana
-Loki
-Promtail
-Ingress
+```
 
-The Ingress Controller receives traffic from the AWS Public ALB and routes requests to Kubernetes services.
+Exemplo de versionamento futuro:
 
-Public ALB HTTPS
-  -> Ingress Controller
-  -> beyud-web / beyud-api
-Namespaces
+```text
+beyud-web:<commit-sha>
+beyud-api:<commit-sha>
+beyud-worker:<commit-sha>
+```
 
-Planned namespaces:
-
-Namespace	Purpose
-beyud-platform	Application workloads
-beyud-gitops	Argo CD
-beyud-observability	Prometheus, Grafana, Loki
-beyud-ingress	Ingress Controller
-Rancher
-
-Rancher is used to manage the RKE2 cluster.
-
-Rancher Server
-  -> manages
-RKE2 Kubernetes Cluster
-
-Rancher runs in a private management subnet.
-
+A estratégia de tag baseada no hash do commit ajuda a manter rastreabilidade entre código, pipeline, imagem e deploy.
 
 ---
 
-# 8. `docs/architecture/cicd-gitops.md`
+## Argo CD
 
-```md
-# CI/CD and GitOps Architecture
+O **Argo CD** será responsável pela entrega contínua baseada em GitOps.
 
-## Overview
+Responsabilidades previstas:
 
-The platform separates CI and CD responsibilities.
+* monitorar o repositório Git;
+* comparar o estado desejado com o estado atual do cluster;
+* exibir diferenças;
+* sincronizar alterações;
+* permitir rollback;
+* manter histórico de deploy.
 
-## CI — GitHub Actions
-
-GitHub Actions is responsible for:
-
-- building the application
-- running tests
-- building Docker images
-- pushing images to Amazon ECR
-
-## CD — Argo CD
-
-Argo CD is responsible for:
-
-- monitoring Kubernetes manifests in Git
-- detecting drift
-- synchronizing the desired state to the cluster
-- supporting rollout and rollback workflows
-
-## Container Registry
-
-Amazon ECR stores Docker images for:
-
-- beyud-web
-- beyud-api
-- beyud-worker
-
-## Deployment Flow
+Conceito principal:
 
 ```text
-Developer
-  -> Git commit
-  -> GitHub Repository
-  -> GitHub Actions
-  -> Docker build
-  -> Push image to Amazon ECR
-  -> Update Kubernetes manifest image tag
-  -> Argo CD sync
-  -> RKE2 Kubernetes Cluster
-Image Tag Strategy
-
-The preferred image tag strategy is based on the Git commit SHA.
-
-Example:
-
-beyud-api:7f3a9c2
-
-This improves traceability between code, image and deployment.
-
+Git = estado desejado
+Cluster = estado atual
+Argo CD = reconciliador
+```
 
 ---
 
-# 9. `docs/architecture/observability.md`
+## Observabilidade
 
-```md
-# Observability Architecture
+A observabilidade da plataforma será baseada em:
 
-## Overview
+* métricas;
+* logs;
+* dashboards;
+* evidências operacionais.
 
-The platform includes observability from the beginning to support operations, troubleshooting and evidence collection.
+Stack definida:
 
-## Metrics
+| Componente | Função                                |
+| ---------- | ------------------------------------- |
+| Prometheus | Coleta e armazenamento de métricas    |
+| Grafana    | Visualização de métricas e dashboards |
+| Loki       | Armazenamento e consulta de logs      |
+| Promtail   | Coleta e envio de logs para o Loki    |
 
-Prometheus is responsible for metrics collection.
+---
 
-Grafana is responsible for dashboards and visualization.
-
-Metrics may include:
-
-- node CPU and memory
-- pod CPU and memory
-- pod restarts
-- deployment replicas
-- API response time
-- HTTP status codes
-- application health checks
-
-## Logs
-
-Loki is responsible for log storage.
-
-Promtail is responsible for collecting container logs and sending them to Loki.
+## Fluxo de métricas
 
 ```text
-Container stdout logs
+Aplicações e cluster
+  -> métricas
+  -> Prometheus
+  -> Grafana
+```
+
+---
+
+## Fluxo de logs
+
+```text
+Aplicações e cluster
+  -> logs
   -> Promtail
   -> Loki
   -> Grafana
-Dashboards
-
-Grafana will be used to visualize:
-
-Kubernetes cluster health
-application health
-pod and node metrics
-API metrics
-logs from application containers
-Application Logs
-
-The applications should write logs to stdout/stderr so Kubernetes and Promtail can collect them.
-
-Expected log sources:
-
-beyud-api
-beyud-worker
-ingress controller
-Kubernetes system components
-Goal
-
-The goal is to troubleshoot the platform using evidence, not guesswork.
-
+```
 
 ---
 
-# 10. `.gitignore` inicial
+## Sinais observáveis previstos
 
-```gitignore
-# OS
-.DS_Store
-Thumbs.db
+### beyud-web
 
-# IDE
-.vscode/
-.idea/
+* disponibilidade da página;
+* status de resposta;
+* logs do container.
 
-# Node
-node_modules/
-dist/
-build/
-.env
+### beyud-api
 
-# .NET
-bin/
-obj/
-*.user
-*.suo
+* endpoint `/health`;
+* tempo de resposta;
+* quantidade de requisições;
+* erros HTTP;
+* falhas de conexão com banco;
+* logs de requisições;
+* logs de exceções.
 
-# Terraform
-.terraform/
-*.tfstate
-*.tfstate.*
-*.tfvars
-crash.log
-override.tf
-override.tf.json
-*_override.tf
-*_override.tf.json
+### beyud-worker
 
-# Kubernetes secrets
-*-secret.yaml
-secrets.yaml
+* quantidade de contatos pendentes;
+* quantidade de contatos processados;
+* falhas de processamento;
+* tempo de processamento;
+* logs de execução;
+* status do worker.
 
-# Logs
-*.log
+---
+
+## Estrutura do repositório
+
+```text
+beyud-platform/
+├── apps/
+│   ├── web/
+│   ├── api/
+│   └── worker/
+├── infra/
+│   └── terraform/
+├── k8s/
+│   ├── base/
+│   ├── overlays/
+│   │   ├── dev/
+│   │   └── prod-style/
+│   └── argocd/
+├── docs/
+│   ├── architecture/
+│   ├── decisions/
+│   ├── runbooks/
+│   ├── evidences/
+│   └── linkedin/
+├── .github/
+│   └── workflows/
+├── README.md
+└── .gitignore
+```
+
+---
+
+## Documentação
+
+A documentação inicial está organizada em:
+
+| Documento                            | Descrição                                           |
+| ------------------------------------ | --------------------------------------------------- |
+| `docs/architecture/overview.md`      | Visão geral da arquitetura                          |
+| `docs/architecture/aws-network.md`   | Rede AWS, VPC, subnets, NAT, ALB e RDS              |
+| `docs/architecture/kubernetes.md`    | Cluster RKE2, Rancher, Ingress e workloads          |
+| `docs/architecture/cicd-gitops.md`   | GitHub Actions, ECR, Argo CD e fluxo GitOps         |
+| `docs/architecture/observability.md` | Prometheus, Grafana, Loki e Promtail                |
+| `docs/decisions/`                    | Decisões arquiteturais                              |
+| `docs/runbooks/`                     | Procedimentos operacionais                          |
+| `docs/evidences/`                    | Evidências técnicas e operacionais                  |
+| `docs/linkedin/`                     | Conteúdos e publicações sobre a evolução do projeto |
+
+---
+
+## Decisões arquiteturais iniciais
+
+As decisões arquiteturais da plataforma serão documentadas em `docs/decisions/`.
+
+ADRs definidos inicialmente:
+
+* `0001-use-monorepo.md`
+* `0002-use-aws-as-cloud-provider.md`
+* `0003-use-terraform-for-infrastructure-as-code.md`
+* `0004-use-rke2-for-kubernetes.md`
+* `0005-use-rancher-for-cluster-management.md`
+* `0006-use-github-actions-and-argocd.md`
+* `0007-use-postgresql-with-rds.md`
+* `0008-use-prometheus-grafana-and-loki.md`
+* `0009-use-private-subnets-for-core-components.md`
+* `0010-use-prod-style-environment.md`
+
+---
+
+## Runbooks
+
+A pasta `docs/runbooks/` será utilizada para documentar procedimentos operacionais.
+
+Exemplos futuros:
+
+* como verificar saúde da API;
+* como consultar logs no Grafana/Loki;
+* como verificar pods com erro;
+* como validar sincronização do Argo CD;
+* como investigar falhas de banco;
+* como validar o processamento do worker.
+
+---
+
+## Evidências operacionais
+
+A pasta `docs/evidences/` será utilizada para armazenar evidências da operação da plataforma.
+
+Exemplos futuros:
+
+* prints de dashboards;
+* prints do Argo CD;
+* prints do Rancher;
+* saídas de comandos;
+* testes de endpoint;
+* evidências de deploy;
+* evidências de troubleshooting.
+
+---
+
+## Etapas do projeto
+
+Mapa-mestre de evolução:
+
+1. Arquitetura e visão
+2. Aplicação local
+3. Containerização
+4. Ambiente local integrado com Docker Compose
+5. Terraform base da AWS
+6. Compute e base operacional
+7. Cluster Kubernetes
+8. Deploy da aplicação no cluster
+9. Observabilidade
+10. Pipeline e GitOps
+11. Evidências operacionais
+12. Posicionamento profissional
+
+---
+
+## Princípios do projeto
+
+A BEYUD Platform será construída seguindo os seguintes princípios:
+
+* documentação antes da automação;
+* arquitetura antes da implementação;
+* infraestrutura versionada;
+* separação por camadas;
+* workloads em subnets privadas;
+* entrada pública controlada por ALB e Ingress;
+* banco de dados gerenciado;
+* observabilidade desde as primeiras fases;
+* decisões técnicas documentadas;
+* evidências operacionais preservadas;
+* evolução incremental e validada por etapas.
+
+---
+
+## Status atual
+
+A fase atual do projeto é a construção da documentação base.
+
+Etapas conceituais já definidas:
+
+* Etapa 0.1 — Escopo funcional da aplicação;
+* Etapa 0.2 — Estrutura do repositório e nomes oficiais;
+* Etapa 0.3 — Arquitetura AWS e desenho lógico final;
+* Etapa 0.4 — Diagrama oficial e explicação para entrevista;
+* Etapa 0.4.1 — Diagrama AWS oficial;
+* Etapa 0.5 — Decisões arquiteturais oficiais / ADRs;
+* Etapa 0.6 — README inicial e documentação base.
+
+---
+
+## Status de implementação
+
+| Área                     | Status        |
+| ------------------------ | ------------- |
+| Escopo funcional         | Definido      |
+| Estrutura do repositório | Definida      |
+| Arquitetura AWS          | Definida      |
+| Diagrama AWS             | Definido      |
+| ADRs iniciais            | Definidos     |
+| Documentação base        | Em construção |
+| Aplicação local          | Não iniciada  |
+| Docker                   | Não iniciado  |
+| Terraform                | Não iniciado  |
+| Kubernetes               | Não iniciado  |
+| CI/CD                    | Não iniciado  |
+| GitOps                   | Não iniciado  |
+| Observabilidade          | Não iniciada  |
+
+---
+
+## Resultado esperado
+
+Ao final da construção da BEYUD Platform, o projeto deverá demonstrar:
+
+* provisionamento de infraestrutura cloud com Terraform;
+* execução de aplicações containerizadas;
+* cluster Kubernetes RKE2 em ambiente AWS;
+* gerenciamento via Rancher;
+* deploy automatizado com GitHub Actions;
+* entrega contínua com Argo CD;
+* uso de registry privado com Amazon ECR;
+* persistência em Amazon RDS PostgreSQL;
+* entrada pública com Route 53, ACM e ALB;
+* observabilidade com Prometheus, Grafana, Loki e Promtail;
+* documentação técnica organizada;
+* evidências operacionais para apresentação profissional.
+
+---
+
+## Autor
+
+Projeto desenvolvido por **Ezequiel Bomfim**, com foco em Cloud, DevOps, Kubernetes, Platform Engineering, infraestrutura como código, observabilidade e operação em cloud.
