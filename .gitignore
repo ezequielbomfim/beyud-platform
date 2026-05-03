@@ -80,4 +80,4 @@ coverage/
 *.har
 
 # Keep example env file
-!.env.example
+!.env.exampleinfra/terraform/environments/prod-style/backend.hcl

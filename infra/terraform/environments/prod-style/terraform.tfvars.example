@@ -1,0 +1,50 @@
+# -----------------------------------------------------------------------------
+# Arquivo: terraform.tfvars.example
+# Objetivo:
+#   Serve como exemplo de valores para as variáveis do ambiente prod-style.
+#
+# Como usar:
+#   Copie este arquivo para terraform.tfvars caso precise sobrescrever os valores
+#   padrão definidos em variables.tf.
+#
+# Observação importante:
+#   Não commite arquivos terraform.tfvars reais se eles tiverem informações
+#   sensíveis ou específicas da sua conta AWS.
+# -----------------------------------------------------------------------------
+
+aws_region   = "us-east-1"
+project_name = "beyud-platform"
+environment  = "prod-style"
+
+vpc_cidr = "10.60.0.0/16"
+
+availability_zones = [
+  "us-east-1a",
+  "us-east-1b"
+]
+
+public_subnets = [
+  "10.60.0.0/24",
+  "10.60.1.0/24"
+]
+
+private_app_subnets = [
+  "10.60.10.0/24",
+  "10.60.11.0/24"
+]
+
+private_data_subnets = [
+  "10.60.20.0/24",
+  "10.60.21.0/24"
+]
+
+private_mgmt_subnets = [
+  "10.60.30.0/24"
+]
+
+common_tags = {
+  Project     = "beyud-platform"
+  Environment = "prod-style"
+  ManagedBy   = "terraform"
+  Owner       = "ezequiel-bomfim"
+}
